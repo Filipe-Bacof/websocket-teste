@@ -1,9 +1,5 @@
 const WebSocket = require("ws");
 
-const { PORT } = process.env;
-
-const wss = new WebSocket.Server({ port: PORT });
-
 function broadcast(jsonObject) {
     if (!this.clients) return;
     this.clients.forEach(client => {
@@ -29,12 +25,17 @@ function onConnection(ws, req) {
     ws.on("error", error => onError(ws, error));
 };
 
-wss.on("connection", onConnection);
+module.exports = (server) => {
+    const wss = new WebSocket.Server({ server });
 
-wss.broadcast = broadcast;
+    wss.on("connection", onConnection);
+    wss.broadcast = broadcast;
 
-setInterval(() => {
-    wss.broadcast({ time: new Date() });
-}, 5000);
+    // setInterval(() => {
+    //     wss.broadcast({ time: new Date() });
+    // }, 5000);
 
-console.log(`WebSocket Server is running at ${PORT}`);
+    console.log(`WebSocket Server is running at ${server.toString()}`);
+
+    return wss;
+};
