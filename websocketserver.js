@@ -25,15 +25,29 @@ function onConnection(ws, req) {
     ws.on("error", error => onError(ws, error));
 };
 
+function verifyClient(info, callback) {
+    console.group("Requisição");
+    console.log("Informações da Requisição");
+    console.log(info.req);
+    console.groupEnd();
+    // Fazer a validação se a pessoa está autorizada a acessar o WSS
+    // console.log(info.req.headers); // "Bearer-token"
+    const userAuthorized = true;
+    return callback(userAuthorized);
+}
+
 module.exports = (server) => {
-    const wss = new WebSocket.Server({ server });
+    const wss = new WebSocket.Server({
+        server,
+        verifyClient
+    });
 
     wss.on("connection", onConnection);
     wss.broadcast = broadcast;
 
-    // setInterval(() => {
-    //     wss.broadcast({ time: new Date() });
-    // }, 5000);
+    setInterval(() => {
+        wss.broadcast({ time: new Date() });
+    }, 5000);
 
     console.log(`WebSocket Server is running at ${server.toString()}`);
 
