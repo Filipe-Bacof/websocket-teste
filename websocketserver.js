@@ -1,5 +1,7 @@
 const WebSocket = require("ws");
 
+const { CORS_ORIGIN, TOKEN } = process.env;
+
 function broadcast(jsonObject) {
     if (!this.clients) return;
     this.clients.forEach(client => {
@@ -26,14 +28,16 @@ function onConnection(ws, req) {
 };
 
 function verifyClient(info, callback) {
-    console.group("Requisição");
-    console.log("Informações da Requisição");
-    console.log(info.req);
-    console.groupEnd();
-    // Fazer a validação se a pessoa está autorizada a acessar o WSS
-    // console.log(info.req.headers); // "Bearer-token"
-    const userAuthorized = true;
-    return callback(userAuthorized);
+    // Verifica se o token é válido
+    const isTokenValid = info.req.headers.token === TOKEN;
+    // Verifica se a origem da requisição é permitida
+    const isSameOriginCORS = info.req.headers.origin === CORS_ORIGIN;
+    // Define se há uma restrição de origem (evita '*' que aceita tudo)
+    const isCorsRestricted = CORS_ORIGIN !== "*";
+
+    // Só autoriza se o token for válido e, se houver CORS, a origem for correta
+    const userAuthorized = isTokenValid && (!isCorsRestricted || isSameOriginCORS);
+    callback(userAuthorized);
 }
 
 module.exports = (server) => {
